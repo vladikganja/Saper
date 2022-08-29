@@ -72,7 +72,7 @@ void Game::Run(sf::RenderWindow& window) {
 
 void Game::reset() {
     field.reset();
-    first_click = true;
+    first_click = true; // to avoid click by chance within new game
     lose = false;
     win = false;
     gameover = false;
@@ -96,15 +96,24 @@ void Game::check_click(const sf::Vector2i& _mouse_pos) {
                             field[i][j]->open();
                             lose = true;
                         }
-                        return;
+                        goto ret;
                     }
                 }
-                else if (sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+                else if (!first_click && sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
                     field[i][j]->mark();
                 }
             }
         }
     }
+ret:
+    std::vector<sf::Vector2i> hint_tiles;
+    if (!first_click && field.check_for_hint(hint_tiles)) {
+        if (hint_tiles.size() > 0) {
+            sf::Vector2i hint_tile = hint_tiles[rand() % hint_tiles.size()];
+            field[hint_tile.y][hint_tile.x]->hint();
+        }
+    }
+    return;
 }
 
 void Game::render(sf::RenderWindow& window) {

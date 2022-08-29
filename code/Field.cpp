@@ -6,6 +6,7 @@ sf::Color Tile::MINE = { 255, 60, 47 };
 sf::Color Tile::BG = { 220, 220, 220 };
 sf::Color Tile::MARK = { 255, 110, 0 };
 sf::Color Tile::DEFUSE = { 0, 204, 51 };
+sf::Color Tile::HINT = { 129, 237, 233 };
 
 Tile::Tile(int i, int j) noexcept {
     i--;
@@ -60,8 +61,11 @@ void Tile::mark() {
         else {
             tile.setFillColor(CLOSED);
         }
-
     }
+}
+
+void Tile::hint() {
+    tile.setFillColor(HINT);
 }
 
 void Tile::reset() {
@@ -85,6 +89,10 @@ bool Tile::is_open() const {
 
 bool Tile::is_closed() const {
     return closed;
+}
+
+bool Tile::is_marked() const {
+    return marked;
 }
 
 void Tile::set_number(int num) {
@@ -298,4 +306,46 @@ void Field::show(sf::RenderWindow& window) {
 
 std::vector<std::shared_ptr<Tile>> Field::operator[](int index) {
     return field[index];
+}
+
+bool Field::check_for_hint(std::vector<sf::Vector2i>& hint_tiles) {
+    for (int i = 1; i < FIELD_HEIGHT + 1; i++) {
+        for (int j = 1; j < FIELD_WIDTH + 1; j++) {
+            if (field[i][j]->is_closed() || field[i][j]->get_number() == 0) {
+                continue;
+            }
+
+            int closed = 0;
+            int marked = 0;
+            for (int y = i - 1; y <= i + 1; y++) {
+                for (int x = j - 1; x <= j + 1; x++) {
+                    if (field[y][x]->is_marked())
+                        marked++;
+                    else if (field[y][x]->is_closed() && y > 0 && y < FIELD_HEIGHT + 1 && x > 0 && x < FIELD_WIDTH + 1)
+                        closed++;
+                }
+            }
+
+            if (field[i][j]->get_number() == marked && closed > 0) {
+                std::cout << "obviously can open around: " << i << " " << j << "\n";
+                return false;
+            }
+            if (field[i][j]->get_number() == closed + marked && closed > 0) {
+                std::cout << "obviously can mark around: " << i << " " << j << "\n";
+                return false;
+            }
+            else {
+                for (int y = i - 1; y <= i + 1; y++) {
+                    for (int x = j - 1; x <= j + 1; x++) {
+                        if (field[y][x]->is_mine() && !field[y][x]->is_marked()) {
+                            hint_tiles.push_back({ x, y });
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    std::cout << "hint\n";
+    return true;
 }

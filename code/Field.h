@@ -25,17 +25,20 @@ public:
     static sf::Color BG;
     static sf::Color MARK;
     static sf::Color DEFUSE;
+    static sf::Color HINT;
 
     explicit Tile(int i, int j) noexcept;
     void place_mine();
     void open();
     void defuse();
     void mark();
+    void hint();
     void reset();
     sf::FloatRect rect() const;
     bool is_mine() const;
     bool is_open() const;
     bool is_closed() const;
+    bool is_marked() const;
     void set_number(int num);
     int get_number() const;
 
@@ -70,4 +73,6 @@ public:
     void show(sf::RenderWindow& window);
 
     std::vector<std::shared_ptr<Tile>> operator[] (int index);
+
+    bool check_for_hint(std::vector<sf::Vector2i>& hint_tiles); // checks if there is need for a hint
 };
